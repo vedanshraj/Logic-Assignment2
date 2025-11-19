@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Logic Assignment 2 — Dafny Verification Report</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        line-height: 1.6;
+        background-color: #f7f9fc;
+    }
+    h1, h2, h3, h4 {
+        font-family: 'Segoe UI', sans-serif;
+        color: #2c3e50;
+    }
+    pre {
+        background: #eee;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        border-left: 4px solid #3498db;
+    }
+    img {
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+    .section {
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 40px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Logic Assignment 2 — Dafny Verification Report</h1>
+<hr>
+
+<div class="section">
+<h2>Task 1: Absolute Value Function</h2>
+
+<p>
+This task required implementing a Dafny method that computes the absolute value of an 
+integer and verifying its correctness using formal specifications (postconditions).
+</p>
+
+<h3>1. Correct Implementation — Verification Screenshot</h3>
+
+<p>The method was verified successfully by Dafny, as shown below:</p>
+
+<img src="screenshots/task1_success.png" width="700">
+<p><strong>Figure:</strong> Successful verification (green checkmark).</p>
+
+
+<h3>2. Incorrect Specification — Verification Failure</h3>
+
+<p>
+To test Dafny’s verification mechanism, the correct postcondition was intentionally replaced
+with an incorrect one. Dafny correctly rejected this version.
+</p>
+
+<pre>
+// Incorrect version (used only for testing)
+method Abs(x: int) returns (x': int)
+  ensures x' >= 0
+  ensures x' == x   // Incorrect postcondition
+{
+  if x < 0 {
+    x' := -x;
+  } else {
+    x' := x;
+  }
+}
+</pre>
+
+<p>
+Dafny reports a verification failure because the method returns <code>-x</code> for negative inputs,
+which does not satisfy the incorrect postcondition <code>x' == x</code>.
+</p>
+
+<img src="screenshots/task1_failure.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to incorrect postcondition.</p>
+
+</div>
+
+</body>
+</html>
