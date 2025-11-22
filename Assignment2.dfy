@@ -18,7 +18,7 @@ method Abs(x: int) returns (x': int)
 // Task 2: Find First Negative in an Array
 // -----------------------------------------------------
 
-method FindFirstNegative(a: array<int>) returns (index: int)
+method FindFirstNegative(a: array?<int>) returns (index: int)
   requires a != null
   ensures index == -1 ==> forall i :: 0 <= i < a.Length ==> a[i] >= 0
   ensures index != -1 ==> 
@@ -106,9 +106,9 @@ method Tribonacci(n: int) returns (result: int)
 
   while i <= n
     invariant 3 <= i <= n + 1
-    invariant t0 <= Trib((i - 3) as nat)   // WRONG (should be ==)
-    invariant t1 <= Trib((i - 2) as nat)   // WRONG
-    invariant t2 <= Trib((i - 1) as nat)   // WRONG
+    invariant t0 == Trib((i - 3) as nat)
+    invariant t1 == Trib((i - 2) as nat)
+    invariant t2 == Trib((i - 1) as nat)
     decreases n + 1 - i
   {
     var next := t0 + t1 + t2;

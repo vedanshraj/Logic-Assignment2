@@ -218,19 +218,19 @@ invariants, and a loop variant. Dafny was then used to verify both partial and t
 <h3>1. Specification Summary</h3>
 
 <ul>
-  <li><strong>Precondition:</strong> <code>n >= 0</code> — factorial is defined only for non-negative integers.</li>
+  <li><strong>Precondition:</strong> <code>n >= 0</code> - factorial is defined only for non-negative integers.</li>
 
-  <li><strong>Postcondition:</strong> <code>result == factorial(n as nat)</code> — the returned value must match the mathematical factorial.</li>
+  <li><strong>Postcondition:</strong> <code>result == factorial(n as nat)</code> - the returned value must match the mathematical factorial.</li>
 
-  <li><strong>Loop Invariant 1:</strong> <code>1 <= i <= n + 1</code> — ensures the loop index remains valid.</li>
+  <li><strong>Loop Invariant 1:</strong> <code>1 <= i <= n + 1</code> - ensures the loop index remains valid.</li>
 
-  <li><strong>Loop Invariant 2:</strong> <code>result == factorial((i - 1) as nat)</code> — ensures that after iteration <code>i</code>, <code>result</code> stores <code>(i - 1)!</code>.</li>
+  <li><strong>Loop Invariant 2:</strong> <code>result == factorial((i - 1) as nat)</code> - ensures that after iteration <code>i</code>, <code>result</code> stores <code>(i - 1)!</code>.</li>
 
-  <li><strong>Loop Variant:</strong> <code>n + 1 - i</code> — strictly decreases each iteration, guaranteeing termination.</li>
+  <li><strong>Loop Variant:</strong> <code>n + 1 - i</code> - strictly decreases each iteration, guaranteeing termination.</li>
 </ul>
 
 
-<h3>2. Correct Implementation — Verification Screenshot</h3>
+<h3>2. Correct Implementation - Verification Screenshot</h3>
 
 <p>
 The correct implementation verified successfully. The two loop invariants maintain a precise
@@ -247,7 +247,7 @@ Dafny confirmed the method meets the mathematical specification.
 <!-- INCORRECT ATTEMPT 1 -->
 <!-- ========================================================= -->
 
-<h3>3. Incorrect Attempt 1 — Wrong Postcondition and Missing Invariant</h3>
+<h3>3. Incorrect Attempt 1 - Wrong Postcondition and Missing Invariant</h3>
 
 <p>
 The first incorrect version contained two major issues:
@@ -299,7 +299,7 @@ from reasoning about the factorial computation.
 <!-- INCORRECT ATTEMPT 2 -->
 <!-- ========================================================= -->
 
-<h3>4. Incorrect Attempt 2 — Wrong Postcondition (with Correct Invariant)</h3>
+<h3>4. Incorrect Attempt 2 - Wrong Postcondition (with Correct Invariant)</h3>
 
 <p>
 In the second incorrect attempt, the invariant was correct, but the postcondition remained incorrect:
@@ -349,7 +349,7 @@ not accurately reflect the intended behavior.
 <!-- INCORRECT ATTEMPT 3 -->
 <!-- ========================================================= -->
 
-<h3>5. Incorrect Attempt 3 — Incorrect Inequality Invariant</h3>
+<h3>5. Incorrect Attempt 3 - Incorrect Inequality Invariant</h3>
 
 <p>
 The third incorrect attempt used the correct postcondition but weakened the key invariant by replacing 
@@ -414,7 +414,7 @@ Task 3 clearly demonstrated how precise specifications are essential in Dafny. C
 </ul>
 
 <p>
-Any weakening of the specification — especially the invariants or postconditions —
+Any weakening of the specification - especially the invariants or postconditions -
 causes verification to fail. Dafny’s feedback helped identify these issues and guided the
 construction of a fully correct factorial implementation.
 </p>
@@ -448,24 +448,24 @@ postconditions, loop invariants, and a loop variant.
   <li><strong>Precondition:</strong> <code>n >= 0</code>.</li>
 
   <li><strong>Postcondition:</strong> 
-      <code>result == Trib(n as nat)</code> — ensures the method returns the exact nth Tribonacci number.</li>
+      <code>result == Trib(n as nat)</code> - ensures the method returns the exact nth Tribonacci number.</li>
 
-  <li><strong>Loop Invariant 1:</strong> <code>3 <= i <= n + 1</code> — guarantees loop index validity.</li>
+  <li><strong>Loop Invariant 1:</strong> <code>3 <= i <= n + 1</code> - guarantees loop index validity.</li>
 
   <li><strong>Loop Invariant 2:</strong> 
-      <code>t0 == Trib((i - 3) as nat)</code> — maintains T(i-3).</li>
+      <code>t0 == Trib((i - 3) as nat)</code> - maintains T(i-3).</li>
 
   <li><strong>Loop Invariant 3:</strong> 
-      <code>t1 == Trib((i - 2) as nat)</code> — maintains T(i-2).</li>
+      <code>t1 == Trib((i - 2) as nat)</code> - maintains T(i-2).</li>
 
   <li><strong>Loop Invariant 4:</strong> 
-      <code>t2 == Trib((i - 1) as nat)</code> — maintains T(i-1).</li>
+      <code>t2 == Trib((i - 1) as nat)</code> - maintains T(i-1).</li>
 
-  <li><strong>Loop Variant:</strong> <code>n + 1 - i</code> — strictly decreases each iteration.</li>
+  <li><strong>Loop Variant:</strong> <code>n + 1 - i</code> - strictly decreases each iteration.</li>
 </ul>
 
 
-<h3>2. Correct Implementation — Verification Screenshot</h3>
+<h3>2. Correct Implementation - Verification Screenshot</h3>
 
 <p>
 The following implementation verified successfully. The loop invariants correctly track the
@@ -482,7 +482,7 @@ termination. Dafny confirms full functional correctness.
 <!-- INCORRECT ATTEMPT 1 -->
 <!-- ========================================================= -->
 
-<h3>3. Incorrect Attempt 1 — Wrong Postcondition</h3>
+<h3>3. Incorrect Attempt 1 - Wrong Postcondition</h3>
 
 <p>
 In this attempt, the postcondition was incorrectly weakened to <code>ensures result >= n</code>.
@@ -542,7 +542,7 @@ method Tribonacci(n: int) returns (result: int)
 <!-- INCORRECT ATTEMPT 2 -->
 <!-- ========================================================= -->
 
-<h3>4. Incorrect Attempt 2 — Missing Key Invariant</h3>
+<h3>4. Incorrect Attempt 2 - Missing Key Invariant</h3>
 
 <p>
 In this version, the invariant maintaining <code>t0 == Trib(i - 3)</code> was removed. The recurrence
@@ -577,7 +577,7 @@ while i <= n
 <!-- INCORRECT ATTEMPT 3 -->
 <!-- ========================================================= -->
 
-<h3>5. Incorrect Attempt 3 — Weak Invariants (Inequalities Instead of Equalities)</h3>
+<h3>5. Incorrect Attempt 3 - Weak Invariants (Inequalities Instead of Equalities)</h3>
 
 <p>
 This version weakens the loop invariants by replacing equality with <code>&lt;=</code>. Although the 
@@ -612,7 +612,7 @@ while i <= n
 <!-- INCORRECT ATTEMPT 4 -->
 <!-- ========================================================= -->
 
-<h3>6. Incorrect Attempt 4 — Wrong Initialization</h3>
+<h3>6. Incorrect Attempt 4 - Wrong Initialization</h3>
 
 <p>
 In this attempt, the base-case values were initialized incorrectly:
