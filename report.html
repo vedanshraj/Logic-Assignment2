@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Logic Assignment 2 — Dafny Verification Report</title>
+<title>Logic Assignment 2 - Dafny Verification Report</title>
 
 <style>
     body {
@@ -39,37 +39,54 @@
 
 <body>
 
-<h1>Logic Assignment 2 — Dafny Verification Report</h1>
+<h1>Logic Assignment 2 - Dafny Verification Report</h1>
 <hr>
+
+
+<!-- ========================================================= -->
+<!-- ======================= TASK 1 =========================== -->
+<!-- ========================================================= -->
 
 <div class="section">
 <h2>Task 1: Absolute Value Function</h2>
 
 <p>
-This task required implementing a Dafny method that computes the absolute value of an 
-integer and verifying its correctness using formal specifications (postconditions).
+The goal of this task was to implement a Dafny method that computes the absolute value 
+of an integer. Dafny was used to verify logical correctness using postconditions that 
+describe the function's expected behavior.
 </p>
 
-<h3>1. Correct Implementation — Verification Screenshot</h3>
+<h3>1. Specification Summary</h3>
 
-<p>The method was verified successfully by Dafny, as shown below:</p>
+<ul>
+  <li><strong>Preconditions:</strong> None (absolute value is defined for all integers).</li>
+  <li><strong>Postcondition 1:</strong> <code>x' >= 0</code> - result is always non-negative.</li>
+  <li><strong>Postcondition 2:</strong> <code>x' == x || x' == -x</code> - captures the 
+      mathematical definition of absolute value.</li>
+  <li><strong>Loop Invariants:</strong> Not applicable (method is non-iterative).</li>
+  <li><strong>Loop Variants:</strong> Not applicable.</li>
+</ul>
+
+<h3>2. Correct Implementation - Verification Screenshot</h3>
+
+<p>The method verified successfully, as shown below:</p>
 
 <img src="screenshots/task1_success.png" width="700">
 <p><strong>Figure:</strong> Successful verification (green checkmark).</p>
 
 
-<h3>2. Incorrect Specification — Verification Failure</h3>
+<h3>3. Incorrect Specification - Verification Failure</h3>
 
 <p>
-To test Dafny’s verification mechanism, the correct postcondition was intentionally replaced
-with an incorrect one. Dafny correctly rejected this version.
+An earlier attempt incorrectly specified the second postcondition, allowing only 
+<code>x' == x</code>. Dafny correctly rejected this since negative inputs produce <code>-x</code>.
 </p>
 
 <pre>
-// Incorrect version (used only for testing)
+// Incorrect version explored during verification
 method Abs(x: int) returns (x': int)
   ensures x' >= 0
-  ensures x' == x   // Incorrect postcondition
+  ensures x' == x   // Incorrect: does not allow x' == -x
 {
   if x < 0 {
     x' := -x;
@@ -80,14 +97,555 @@ method Abs(x: int) returns (x': int)
 </pre>
 
 <p>
-Dafny reports a verification failure because the method returns <code>-x</code> for negative inputs,
-which does not satisfy the incorrect postcondition <code>x' == x</code>.
+Dafny rejected this version because the method returns <code>-x</code> for negative values,
+which does not satisfy the incorrect postcondition.
 </p>
 
 <img src="screenshots/task1_failure.png" width="700">
 <p><strong>Figure:</strong> Verification failure due to incorrect postcondition.</p>
 
+<h3>4. Learning Outcome</h3>
+<p>
+This task demonstrated the importance of writing complete and accurate postconditions.
+Even a small omission results in verification failure, reinforcing how Dafny enforces 
+logical correctness.
+</p>
+
 </div>
+
+
+
+<!-- ========================================================= -->
+<!-- ======================= TASK 2 =========================== -->
+<!-- ========================================================= -->
+
+<div class="section">
+<h2>Task 2: Finding the First Negative Number in an Array</h2>
+
+<p>
+This task required implementing a Dafny method that scans an array and returns the index 
+of the first negative value. Verification required correct postconditions, loop invariants, 
+and loop variants to ensure both correctness and termination.
+</p>
+
+<h3>1. Specification Summary</h3>
+
+<ul>
+  <li><strong>Precondition:</strong> <code>a != null</code> - array must exist.</li>
+
+  <li><strong>Postcondition (no negative found; index == -1):</strong><br>
+      <code>forall i :: 0 ≤ i < a.Length ⇒ a[i] ≥ 0</code></li>
+
+  <li><strong>Postcondition (negative found; index != -1):</strong><br>
+      <code>0 ≤ index < a.Length</code><br>
+      <code>a[index] < 0</code><br>
+      <code>forall j :: 0 ≤ j < index ⇒ a[j] ≥ 0</code></li>
+
+  <li><strong>Loop Invariant 1:</strong> <code>0 ≤ i ≤ a.Length</code> - loop index stays in bounds.</li>
+  <li><strong>Loop Invariant 2:</strong>
+      <code>forall j :: 0 ≤ j < i ⇒ a[j] ≥ 0</code> - all checked elements so far are non-negative.</li>
+
+  <li><strong>Loop Variant:</strong> <code>a.Length - i</code> - decreases each iteration, proving termination.</li>
+</ul>
+
+
+<h3>2. Correct Implementation - Verification Screenshot</h3>
+
+<p>
+The method verified successfully with the complete specification:
+</p>
+
+<img src="screenshots/task2_success.png" width="700">
+<p><strong>Figure:</strong> Successful verification (green checkmark).</p>
+
+
+<h3>3. Verification Failure Encountered During Development</h3>
+
+<p>
+In an earlier attempt, the postcondition referenced <code>a[index]</code> without ensuring that 
+<code>index</code> was within bounds. Dafny correctly rejected this, since safe array access 
+must be explicitly guaranteed.
+</p>
+
+<pre>
+// Incorrect version encountered during verification
+method FindFirstNegative(a: array<int>) returns (index: int)
+  requires a != null
+  ensures index == -1 ==> forall i :: 0 <= i < a.Length ==> a[i] >= 0
+  ensures index != -1 ==> 
+            a[index] < 0 &&                     // Missing explicit bound
+            (forall j :: 0 <= j < index ==> a[j] >= 0)
+{
+  var i := 0;
+
+  while i < a.Length
+    invariant 0 <= i <= a.Length
+    invariant forall j :: 0 <= j < i ==> a[j] >= 0
+    decreases a.Length - i
+  {
+    if a[i] < 0 {
+      index := i;
+      return;
+    }
+    i := i + 1;
+  }
+
+  index := -1;
+}
+</pre>
+
+<img src="screenshots/task2_failure.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to potential out-of-bounds access.</p>
+
+<h3>4. Learning Outcome</h3>
+<p>
+This task highlighted the importance of explicitly specifying array index bounds in postconditions. 
+Once the missing range condition was added, Dafny was able to verify the method successfully.
+</p>
+
+</div>
+
+<div class="section">
+<h2>Task 3: Factorial of n (Iterative)</h2>
+
+<p>
+This task required implementing an iterative version of the factorial function in Dafny.
+To verify correctness, a recursive mathematical definition of factorial was provided, and
+the method was required to satisfy appropriate preconditions, postconditions, loop
+invariants, and a loop variant. Dafny was then used to verify both partial and total correctness.
+</p>
+
+<h3>1. Specification Summary</h3>
+
+<ul>
+  <li><strong>Precondition:</strong> <code>n >= 0</code> — factorial is defined only for non-negative integers.</li>
+
+  <li><strong>Postcondition:</strong> <code>result == factorial(n as nat)</code> — the returned value must match the mathematical factorial.</li>
+
+  <li><strong>Loop Invariant 1:</strong> <code>1 <= i <= n + 1</code> — ensures the loop index remains valid.</li>
+
+  <li><strong>Loop Invariant 2:</strong> <code>result == factorial((i - 1) as nat)</code> — ensures that after iteration <code>i</code>, <code>result</code> stores <code>(i - 1)!</code>.</li>
+
+  <li><strong>Loop Variant:</strong> <code>n + 1 - i</code> — strictly decreases each iteration, guaranteeing termination.</li>
+</ul>
+
+
+<h3>2. Correct Implementation — Verification Screenshot</h3>
+
+<p>
+The correct implementation verified successfully. The two loop invariants maintain a precise
+relationship between <code>i</code> and <code>result</code>, while the variant ensures termination.
+Dafny confirmed the method meets the mathematical specification.
+</p>
+
+<img src="screenshots/task3_success.png" width="700">
+<p><strong>Figure:</strong> Successful verification (green checkmark).</p>
+
+
+
+<!-- ========================================================= -->
+<!-- INCORRECT ATTEMPT 1 -->
+<!-- ========================================================= -->
+
+<h3>3. Incorrect Attempt 1 — Wrong Postcondition and Missing Invariant</h3>
+
+<p>
+The first incorrect version contained two major issues:
+</p>
+
+<ul>
+  <li>The postcondition was incorrectly written as <code>ensures result >= n</code>.</li>
+  <li>The main factorial invariant <code>result == factorial((i - 1) as nat)</code> was missing.</li>
+</ul>
+
+<p>
+Because the postcondition no longer matched the factorial definition and the loop did not
+preserve any relationship between <code>result</code> and <code>i</code>, Dafny had no way to
+prove that the final value of <code>result</code> was correct. As expected, the verifier rejected
+this version.
+</p>
+
+<pre>
+// Incorrect Attempt 1
+method Factorial(n: int) returns (result: int) 
+  requires n >= 0
+  ensures result >= n     // Incorrect postcondition
+{
+  var i := 1;
+  result := 1;
+
+  while i <= n
+    invariant 1 <= i <= n + 1   // Missing factorial invariant
+    decreases n + 1 - i
+  {
+    result := result * i;
+    i := i + 1;
+  }
+}
+</pre>
+
+<p>
+Dafny produced the error “postcondition might not hold,” since it had no basis to infer
+that <code>result >= n</code> would always be true. The missing invariant further prevented Dafny
+from reasoning about the factorial computation.
+</p>
+
+<img src="screenshots/task3_failure1.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to missing invariant and incorrect postcondition.</p>
+
+
+
+<!-- ========================================================= -->
+<!-- INCORRECT ATTEMPT 2 -->
+<!-- ========================================================= -->
+
+<h3>4. Incorrect Attempt 2 — Wrong Postcondition (with Correct Invariant)</h3>
+
+<p>
+In the second incorrect attempt, the invariant was correct, but the postcondition remained incorrect:
+<code>ensures result >= n</code>. Although mathematically <code>factorial(n) >= n</code> holds for all
+<code>n > 0</code>, Dafny cannot assume this unless it is explicitly proven using lemmas or additional
+invariants. Without such justification, the verifier again rejected the method.
+</p>
+
+<pre>
+// Incorrect Attempt 2
+function factorial(n: nat): nat
+{
+    if n == 0 then 1 else n * factorial(n - 1)
+}
+
+method Factorial(n: int) returns (result: int)
+  requires n >= 0
+  ensures result >= n        // Incorrect postcondition
+{
+  var i := 1;
+  result := 1;
+
+  while i <= n
+    invariant 1 <= i <= n + 1
+    invariant result == factorial((i - 1) as nat)
+    decreases n + 1 - i
+  {
+    result := result * i;
+    i := i + 1;
+  }
+}
+</pre>
+
+<p>
+Dafny reported “postcondition might not hold,” since the invariant 
+<code>result == factorial((i - 1) as nat)</code> does not imply <code>result >= n</code>.  
+This demonstrated that correct invariants alone are insufficient if the specification does 
+not accurately reflect the intended behavior.
+</p>
+
+<img src="screenshots/task3_failure2.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to incorrect postcondition.</p>
+
+
+
+<!-- ========================================================= -->
+<!-- INCORRECT ATTEMPT 3 -->
+<!-- ========================================================= -->
+
+<h3>5. Incorrect Attempt 3 — Incorrect Inequality Invariant</h3>
+
+<p>
+The third incorrect attempt used the correct postcondition but weakened the key invariant by replacing 
+equality with an inequality:
+</p>
+
+<pre>
+invariant result <= factorial((i - 1) as nat)
+</pre>
+
+<p>
+Although this appears reasonable, it is too weak for Dafny to use in proving the final postcondition 
+<code>result == factorial(n as nat)</code>. Dafny must know the exact relationship between 
+<code>result</code> and <code>i</code> at every step. Because the invariant used <code>&lt;=</code> 
+instead of <code>==</code>, Dafny could not verify functional correctness.
+</p>
+
+<pre>
+// Incorrect Attempt 3
+function factorial(n: nat): nat
+{
+    if n == 0 then 1 else n * factorial(n - 1)
+}
+
+method Factorial(n: int) returns (result: int)
+  requires n >= 0
+  ensures result == factorial(n as nat)
+{
+  var i := 1;
+  result := 1;
+
+  while i <= n
+    invariant 1 <= i <= n + 1
+    invariant result <= factorial((i - 1) as nat)   // Incorrect invariant
+    decreases n + 1 - i
+  {
+    result := result * i;
+    i := i + 1;
+  }
+}
+</pre>
+
+<p>
+As expected, Dafny failed with “postcondition might not hold,” demonstrating that even slight 
+weakening of an invariant breaks the proof and prevents Dafny from verifying correctness.
+</p>
+
+<img src="screenshots/task3_failure3.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to an insufficient loop invariant.</p>
+
+
+
+<h3>6. Learning Outcome</h3>
+<p>
+Task 3 clearly demonstrated how precise specifications are essential in Dafny. Correctness requires:
+</p>
+
+<ul>
+  <li>A mathematically exact postcondition</li>
+  <li>Strong loop invariants that capture the inductive structure of factorial</li>
+  <li>A decreasing variant to ensure termination</li>
+</ul>
+
+<p>
+Any weakening of the specification — especially the invariants or postconditions —
+causes verification to fail. Dafny’s feedback helped identify these issues and guided the
+construction of a fully correct factorial implementation.
+</p>
+
+</div>
+
+<div class="section">
+<h2>Task 4: Tribonacci Sequence (Iterative)</h2>
+
+<p>
+This task required implementing an iterative version of the Tribonacci sequence in Dafny.
+The Tribonacci sequence is defined as:
+</p>
+
+<pre>
+T0 = 0
+T1 = 1
+T2 = 1
+Tn = Tn-1 + Tn-2 + Tn-3  for n ≥ 3
+</pre>
+
+<p>
+To verify correctness, a mathematical function <code>Trib(n)</code> was defined, and the iterative
+implementation was checked against this specification using appropriate preconditions,
+postconditions, loop invariants, and a loop variant.
+</p>
+
+<h3>1. Specification Summary</h3>
+
+<ul>
+  <li><strong>Precondition:</strong> <code>n >= 0</code>.</li>
+
+  <li><strong>Postcondition:</strong> 
+      <code>result == Trib(n as nat)</code> — ensures the method returns the exact nth Tribonacci number.</li>
+
+  <li><strong>Loop Invariant 1:</strong> <code>3 <= i <= n + 1</code> — guarantees loop index validity.</li>
+
+  <li><strong>Loop Invariant 2:</strong> 
+      <code>t0 == Trib((i - 3) as nat)</code> — maintains T(i-3).</li>
+
+  <li><strong>Loop Invariant 3:</strong> 
+      <code>t1 == Trib((i - 2) as nat)</code> — maintains T(i-2).</li>
+
+  <li><strong>Loop Invariant 4:</strong> 
+      <code>t2 == Trib((i - 1) as nat)</code> — maintains T(i-1).</li>
+
+  <li><strong>Loop Variant:</strong> <code>n + 1 - i</code> — strictly decreases each iteration.</li>
+</ul>
+
+
+<h3>2. Correct Implementation — Verification Screenshot</h3>
+
+<p>
+The following implementation verified successfully. The loop invariants correctly track the
+three previous Tribonacci numbers required for computing the next term, and the variant proves
+termination. Dafny confirms full functional correctness.
+</p>
+
+<img src="screenshots/task4_success.png" width="700">
+<p><strong>Figure:</strong> Successful verification (green checkmark).</p>
+
+
+
+<!-- ========================================================= -->
+<!-- INCORRECT ATTEMPT 1 -->
+<!-- ========================================================= -->
+
+<h3>3. Incorrect Attempt 1 — Wrong Postcondition</h3>
+
+<p>
+In this attempt, the postcondition was incorrectly weakened to <code>ensures result >= n</code>.
+Even though the Tribonacci sequence eventually grows beyond <code>n</code>, Dafny cannot prove this
+property from the loop invariants alone. The specification no longer reflects the intended behavior,
+leading to a verification failure.
+</p>
+
+<pre>
+// Incorrect Attempt 1: Wrong postcondition
+method Tribonacci(n: int) returns (result: int)
+  requires n >= 0
+  ensures result >= n     // Incorrect postcondition
+{
+  if n == 0 {
+    result := 0;
+    return;
+  }
+  if n == 1 {
+    result := 1;
+    return;
+  }
+  if n == 2 {
+    result := 1;
+    return;
+  }
+
+  var t0 := 0;
+  var t1 := 1;
+  var t2 := 1;
+  var i := 3;
+
+  while i <= n
+    invariant 3 <= i <= n + 1
+    invariant t0 == Trib((i - 3) as nat)
+    invariant t1 == Trib((i - 2) as nat)
+    invariant t2 == Trib((i - 1) as nat)
+    decreases n + 1 - i
+  {
+    var next := t0 + t1 + t2;
+    t0 := t1;
+    t1 := t2;
+    t2 := next;
+    i := i + 1;
+  }
+
+  result := t2;
+}
+</pre>
+
+<img src="screenshots/task4_failure1.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to incorrect postcondition.</p>
+
+
+
+<!-- ========================================================= -->
+<!-- INCORRECT ATTEMPT 2 -->
+<!-- ========================================================= -->
+
+<h3>4. Incorrect Attempt 2 — Missing Key Invariant</h3>
+
+<p>
+In this version, the invariant maintaining <code>t0 == Trib(i - 3)</code> was removed. The recurrence
+computation depends on having all three previous Tribonacci values correct. Without this invariant,
+Dafny cannot prove that the update step maintains correctness, nor can it establish the final
+postcondition.
+</p>
+
+<pre>
+// Incorrect Attempt 2: Missing t0 invariant
+while i <= n
+  invariant 3 <= i <= n + 1
+  // Missing: invariant t0 == Trib((i - 3) as nat)
+  invariant t1 == Trib((i - 2) as nat)
+  invariant t2 == Trib((i - 1) as nat)
+  decreases n + 1 - i
+{
+    var next := t0 + t1 + t2;
+    t0 := t1;
+    t1 := t2;
+    t2 := next;
+    i := i + 1;
+}
+</pre>
+
+<img src="screenshots/task4_failure2.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to missing invariant.</p>
+
+
+
+<!-- ========================================================= -->
+<!-- INCORRECT ATTEMPT 3 -->
+<!-- ========================================================= -->
+
+<h3>5. Incorrect Attempt 3 — Weak Invariants (Inequalities Instead of Equalities)</h3>
+
+<p>
+This version weakens the loop invariants by replacing equality with <code>&lt;=</code>. Although the 
+inequalities are mathematically true for positive Tribonacci values, they do not provide enough 
+precision for Dafny to infer the exact value of the next term. As a result, the postcondition 
+cannot be derived from these weakened invariants.
+</p>
+
+<pre>
+// Incorrect Attempt 3: Weak invariants
+while i <= n
+  invariant 3 <= i <= n + 1
+  invariant t0 <= Trib((i - 3) as nat)   // too weak
+  invariant t1 <= Trib((i - 2) as nat)
+  invariant t2 <= Trib((i - 1) as nat)
+  decreases n + 1 - i
+{
+    var next := t0 + t1 + t2;
+    t0 := t1;
+    t1 := t2;
+    t2 := next;
+    i := i + 1;
+}
+</pre>
+
+<img src="screenshots/task4_failure3.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to insufficient invariants.</p>
+
+
+
+<!-- ========================================================= -->
+<!-- INCORRECT ATTEMPT 4 -->
+<!-- ========================================================= -->
+
+<h3>6. Incorrect Attempt 4 — Wrong Initialization</h3>
+
+<p>
+In this attempt, the base-case values were initialized incorrectly:
+<code>t0</code> and <code>t1</code> did not match <code>Trib(0)</code> and <code>Trib(1)</code>.
+As a result, the loop invariants fail immediately on entry, since Dafny cannot reconcile the
+incorrect initial values with the specification.
+</p>
+
+<pre>
+// Incorrect Attempt 4: Wrong initialization
+var t0 := 1;   // Should be 0
+var t1 := 0;   // Should be 1
+var t2 := 1;   // Correct
+
+// invariants will fail at loop entry
+</pre>
+
+<img src="screenshots/task4_failure4.png" width="700">
+<p><strong>Figure:</strong> Verification failure due to incorrect initialization.</p>
+
+
+
+<h3>7. Learning Outcome</h3>
+<p>
+Task 4 highlighted the importance of maintaining accurate recurrence relationships in loop invariants
+when verifying iterative implementations of recursively defined sequences. Incorrect initialization,
+weakened invariants, or imprecise postconditions all resulted in verification failures. Dafny’s feedback
+helped ensure that the final implementation fully adhered to the Tribonacci specification and preserved
+correct state across iterations.
+</p>
+
+</div>
+
 
 </body>
 </html>
